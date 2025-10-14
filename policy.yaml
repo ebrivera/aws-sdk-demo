@@ -1,0 +1,11 @@
+# Policy for safe code changes
+max_lines_changed: 150
+blocked_paths:
+  - "src/payments/**"
+  - "src/production-only/**"
+required_tests: true
+max_files_per_pr: 5
+freeze_windows:
+  - day: "Friday"
+    after: "15:00"
+    rule: "no_database_changes"
