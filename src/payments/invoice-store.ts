@@ -3,28 +3,32 @@ import AWS from 'aws-sdk';
 
 export class InvoiceStore {
   private s3: AWS.S3;
-
-  constructor() {
-    this.s3 = new AWS.S3({ region: 'us-east-1' });
+ constructor() {
+     this.s3 = new S3Client({ region: 'us-east-1' });
+ }
   }
+ async saveInvoice(invoiceId: string, data: any): Promise<void> {
+     const params = {
+       Bucket: 'production-invoices',
+       Key: `invoices/${invoiceId}.json`,
+       Body: JSON.stringify(data),
+     };
 
-  async saveInvoice(invoiceId: string, data: any): Promise<void> {
-    const params = {
-      Bucket: 'production-invoices',
-      Key: `invoices/${invoiceId}.json`,
-      Body: JSON.stringify(data),
-    };
-
-    await this.s3.putObject(params).promise();
+     const command = new PutObjectCommand(params);
+     await this.s3.send(command);
+   }
   }
 
   async getInvoice(invoiceId: string): Promise<any> {
-    const params = {
-      Bucket: 'production-invoices',
-      Key: `invoices/${invoiceId}.json`,
-    };
+      const params = {
+        Bucket: 'production-invoices',
+        Key: `invoices/${invoiceId}.json`,
+      };
 
-    const result = await this.s3.getObject(params).promise();
-    return JSON.parse(result.Body?.toString() || '{}');
+      const command = new GetObjectCommand(params);
+      const response = await this.s3.send(command);
+      const bytes = response.Body ? await response.Body.transformToByteArray() : undefined;
+      const text = bytes ? new TextDecoder().decode(bytes) : '{}';
+      return JSON.parse(text);
   }
 }
