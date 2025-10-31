@@ -10,38 +10,38 @@ export interface User {
 export class DynamoDBService {
   private dynamodb: AWS.DynamoDB.DocumentClient;
   private tableName: string;
-
-  constructor(tableName: string, region: string = 'us-east-1') {
-    // Different pattern: using DocumentClient
-    this.dynamodb = new AWS.DynamoDB.DocumentClient({ region });
-    this.tableName = tableName;
+ constructor(tableName: string, region: string = 'us-east-1') {
+     const client = new DynamoDBClient({ region });
+     this.dynamodb = DynamoDBDocumentClient.from(client);
+     this.tableName = tableName;
+   }
   }
+ async getUser(id: string): Promise<User | null> {
+     const command = new GetCommand({
+       TableName: this.tableName,
+       Key: { id },
+     });
 
-  async getUser(id: string): Promise<User | null> {
-    const params = {
-      TableName: this.tableName,
-      Key: { id },
-    };
-
-    const result = await this.dynamodb.get(params).promise();
-    return result.Item as User || null;
+     const result = await this.dynamodb.send(command);
+     return result.Item as User || null;
+ }
   }
+ async putUser(user: User): Promise<void> {
+     const command = new PutCommand({
+       TableName: this.tableName,
+       Item: user,
+     });
 
-  async putUser(user: User): Promise<void> {
-    const params = {
-      TableName: this.tableName,
-      Item: user,
-    };
-
-    await this.dynamodb.put(params).promise();
+     await this.dynamodb.send(command);
+ }
   }
+ async deleteUser(id: string): Promise<void> {
+     const command = new DeleteCommand({
+       TableName: this.tableName,
+       Key: { id },
+     });
 
-  async deleteUser(id: string): Promise<void> {
-    const params = {
-      TableName: this.tableName,
-      Key: { id },
-    };
-
-    await this.dynamodb.delete(params).promise();
+     await this.dynamodb.send(command);
+ }
   }
 }
