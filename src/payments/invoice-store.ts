@@ -3,28 +3,47 @@ import AWS from 'aws-sdk';
 
 export class InvoiceStore {
   private s3: AWS.S3;
+ import { S3Client } from "@aws-sdk/client-s3";
 
-  constructor() {
-    this.s3 = new AWS.S3({ region: 'us-east-1' });
+ constructor() {
+     this.s3 = new S3Client({ region: 'us-east-1' });
+ }
   }
 
   async saveInvoice(invoiceId: string, data: any): Promise<void> {
-    const params = {
-      Bucket: 'production-invoices',
-      Key: `invoices/${invoiceId}.json`,
-      Body: JSON.stringify(data),
-    };
+    import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-    await this.s3.putObject(params).promise();
-  }
+    async saveInvoice(invoiceId: string, data: any): Promise<void> {
+        const client = new S3Client({ region: 'us-east-1' });
 
+        const command = new PutObjectCommand({
+            Bucket: 'production-invoices',
+            Key: `invoices/${invoiceId}.json`,
+            Body: JSON.stringify(data),
+        });
+
+        await client.send(command);
+    }
   async getInvoice(invoiceId: string): Promise<any> {
     const params = {
       Bucket: 'production-invoices',
       Key: `invoices/${invoiceId}.json`,
     };
+ import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
-    const result = await this.s3.getObject(params).promise();
-    return JSON.parse(result.Body?.toString() || '{}');
-  }
-}
+ async getInvoice(invoiceId: string): Promise<any> {
+     const client = new S3Client({ region: 'us-east-1' });
+     const command = new GetObjectCommand({
+         Bucket: 'production-invoices',
+         Key: `invoices/${invoiceId}.json`,
+     });
+
+     try {
+         const response = await client.send(command);
+         const bodyString = await response.Body.transformToString();
+         return JSON.parse(bodyString || '{}');
+     } catch (error) {
+         console.error("Error fetching invoice:", error);
+         throw error;
+     }
+ }
