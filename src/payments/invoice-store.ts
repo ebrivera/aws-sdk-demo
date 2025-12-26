@@ -14,7 +14,6 @@ export class InvoiceStore {
       Key: `invoices/${invoiceId}.json`,
       Body: JSON.stringify(data),
     };
-
     await this.s3.putObject(params).promise();
   }
 
